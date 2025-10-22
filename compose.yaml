@@ -1,0 +1,103 @@
+x-hma-config: &hma-config
+  HMA_DB_USER: "hma"
+  HMA_DB_PASS: "use_different_in_production"
+  HMA_DB_HOST: "db"
+  HMA_DB_NAME: "hma"
+  HMA_API_KEY_REQUIRED: "false"  # see README
+  #HMA_API_KEY: "set_me_to_use_an_api_key"  # uncomment to use
+
+x-hma-common: &hma-common
+  build: .
+  restart: unless-stopped
+  networks: ["hma"]
+
+# ------------------------------------
+
+volumes:
+  pgdata:
+
+networks:
+  hma:
+    driver: bridge
+
+services:
+  db:
+    image: postgres
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    #ports: ["127.0.0.1:5432:5432"] # uncomment if needed for debugging
+    networks: ["hma"]
+    environment:
+      # These values must match the hma-config above
+      POSTGRES_USER: "hma"
+      POSTGRES_PASSWORD: "use_different_in_production"
+      POSTGRES_DB: "hma"
+  frontend: # traefik is easier than trying to maintain a reverse proxy config for this
+    image: docker.io/traefik:v2.11
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "5100:80"
+    networks: ["hma"]
+    command: [
+      # Debugging
+      "--log.level=DEBUG",
+      "--accesslog=true",
+
+      # Platform configuration
+      "--providers.docker",
+      "--providers.docker.exposedbydefault=false", # because we control things with networks
+      "--providers.docker.network=hma", # connect to everything over `hma` network
+
+      # Set up the basic HTTP listener
+      "--entrypoints.web.address=:80",
+    ]
+  worker_cron:  # also runs migrations first (all other workers depend on this one)
+    <<: *hma-common
+    depends_on: ["db"]
+    environment:
+      <<: *hma-config
+      HMA_ROLE: "CRON"
+  worker_ui:
+    <<: *hma-common
+    depends_on: ["worker_cron"]
+    environment:
+      <<: *hma-config
+      HMA_ROLE: "UI"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ui.entrypoints=web
+      - traefik.http.routers.ui.rule=Host(`localhost`) && PathPrefix(`/ui`)
+  worker_curator:
+    <<: *hma-common
+    depends_on: ["worker_cron"]
+    environment:
+      <<: *hma-config
+      HMA_ROLE: "CURATOR"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.curator.entrypoints=web
+      # We run the curator on a catch-all route because it also serves the (unprefixed) API too
+      - traefik.http.routers.curator.rule=Host(`localhost`) && PathPrefix(`/`)
+  worker_hasher:
+    <<: *hma-common
+    depends_on: ["worker_cron"]
+    environment:
+      <<: *hma-config
+      HMA_ROLE: "HASHER"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.hasher.entrypoints=web
+      - traefik.http.routers.hasher.rule=Host(`localhost`) && PathPrefix(`/h`)
+  worker_matcher:
+    <<: *hma-common
+    depends_on: ["worker_cron"]
+    environment:
+      <<: *hma-config
+      HMA_ROLE: "MATCHER"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.matcher.entrypoints=web
+      - traefik.http.routers.matcher.rule=Host(`localhost`) && PathPrefix(`/m`)
