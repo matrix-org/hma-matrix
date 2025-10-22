@@ -50,7 +50,7 @@ To quickly set up a local HMA stack for developing applications which use HMA, t
 2. `docker compose up -d`
 3. Visit `http://localhost:5100/ui`
 
-> [!DANGER]
+> [!CAUTION]
 > This stack is set up by default *without* an API key to allow use of the UI. It's recommended to set an API key in production deployments.
 
 When API authentication is enabled, supply the API key as a Bearer token in the Authorization header:
