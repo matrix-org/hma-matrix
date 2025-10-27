@@ -14,7 +14,7 @@ The following environment variables can be specified:
 * `HMA_DB_NAME` (default `hma`) - The name of the database on the PostgreSQL server to use.
 * `HMA_DB_USER` (default `hma`) - The username to access the PostgreSQL database.
 * `HMA_DB_PASS` (no default - **required**) - The password for the above user.
-* `HMA_API_KEY` (no default - **required** if `HMA_API_KEY_NOT_REQUIRED` not set) - The API key to require on requests. The UI may not function with an API key set - use HMA's Docker Compose/development setup for experimentation with the UI.
+* `HMA_API_KEY` (no default - **required** if `HMA_API_KEY_REQUIRED` is not `false`) - The API key to require on requests. The UI may not function with an API key set - use HMA's Docker Compose/development setup for experimentation with the UI.
 * `HMA_API_KEY_REQUIRED` (default `true`) - Set this to `false` to disable the API key requirement. This can allow you to use the UI properly when there's no API key. Ignored when an API key is specified.
 * `HMA_WORKER_ROLE` (no default - **required**) - The type of functionality to enable on this particular instance. This allows for load balancing some/all aspects of HMA's operations. Reverse proxying and routing traffic to workers is left as an exercise for the reader 😇.
 
