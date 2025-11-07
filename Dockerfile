@@ -1,4 +1,4 @@
-FROM ghcr.io/facebook/threatexchange/hma:1.0.21
+FROM ghcr.io/facebook/threatexchange/hma:1.0.22
 
 # Install dos2unix because we have Windows users that build this thing
 RUN apt-get update && apt-get install dos2unix -y
