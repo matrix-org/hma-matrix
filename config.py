@@ -58,7 +58,7 @@ FLASK_LOGGING_CONFIG = dictConfig(
 )
 
 # Export flags to HMA depending on our definition of a "role"
-role = os.environ.get("HMA_ROLE", "")
+role = os.environ.get("HMA_WORKER_ROLE", "")
 if role == "UI":
   UI_ENABLED = True
 elif role == "CURATOR":
