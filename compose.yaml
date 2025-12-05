@@ -59,13 +59,13 @@ services:
     depends_on: ["db"]
     environment:
       <<: *hma-config
-      HMA_ROLE: "CRON"
+      HMA_WORKER_ROLE: "CRON"
   worker_ui:
     <<: *hma-common
     depends_on: ["worker_cron"]
     environment:
       <<: *hma-config
-      HMA_ROLE: "UI"
+      HMA_WORKER_ROLE: "UI"
     labels:
       - traefik.enable=true
       - traefik.http.routers.ui.entrypoints=web
@@ -75,7 +75,7 @@ services:
     depends_on: ["worker_cron"]
     environment:
       <<: *hma-config
-      HMA_ROLE: "CURATOR"
+      HMA_WORKER_ROLE: "CURATOR"
     labels:
       - traefik.enable=true
       - traefik.http.routers.curator.entrypoints=web
@@ -86,7 +86,7 @@ services:
     depends_on: ["worker_cron"]
     environment:
       <<: *hma-config
-      HMA_ROLE: "HASHER"
+      HMA_WORKER_ROLE: "HASHER"
     labels:
       - traefik.enable=true
       - traefik.http.routers.hasher.entrypoints=web
@@ -96,7 +96,7 @@ services:
     depends_on: ["worker_cron"]
     environment:
       <<: *hma-config
-      HMA_ROLE: "MATCHER"
+      HMA_WORKER_ROLE: "MATCHER"
     labels:
       - traefik.enable=true
       - traefik.http.routers.matcher.entrypoints=web

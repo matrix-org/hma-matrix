@@ -96,6 +96,8 @@ if api_key != "":
     @app.before_request
     def require_auth():
         app.logger.info("%s %s", request.method, request.path)
+        if request.path == "/site-map" or request.path == "/status":
+          return  # don't require auth on "status" endpoints
         auth = request.headers.get("Authorization", "")
         if not auth.startswith("Bearer ") or auth[7:] != api_key:
             return Response("Authentication required", 401)
