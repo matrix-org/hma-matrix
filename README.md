@@ -21,9 +21,12 @@ The following environment variables can be specified:
   The role **must** be one of the following:
 
   * `HASHER` - Services the `/h/*` API endpoints for hashing. Note that hashing can be resource intensive.
-  * `MATCHER` - Services the `/m/*` API endpoints for matching.
+  * `MATCHER` - Services the `/m/*` API endpoints for matching. The matcher can additionally have the following environment variables:
+    * `HMA_INDEX_CACHE_INTERVAL_SECONDS` (default `30`) - The interval to cache the internal index at.
   * `CURATOR` - Services the `/c/*` API endpoints for managing content, banks, exchanges, etc.
-  * `CRON` - Runs scheduled tasks and builds the internal index for the matcher(s). There should be no more than one of these running at a time.
+  * `CRON` - Runs scheduled tasks and builds the internal index for the matcher(s). There should be no more than one of these running at a time. The cron worker can additionally have the following environment variables:
+    * `HMA_FETCHER_INTERVAL_SECONDS` (default `240` (4 minutes)) - The interval to fetch from exchanges at. This is set to `30` seconds in hma-matrix's `compose.yaml`.
+    * `HMA_INDEXER_INTERVAL_SECONDS` (default `60` (1 minute)) - The interval to rebuild the internal index at.
   * `UI` - Services the `/ui/*` endpoints. Note that the UI might not function if an API key is set. The UI worker is the only worker that's not required to run a complete HMA instance.
 
 The above can then be provided to the hma-matrix Docker image to run a worker:

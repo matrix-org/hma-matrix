@@ -66,15 +66,15 @@ elif role == "CURATOR":
 elif role == "CRON":  # There should only be ONE of these
   TASK_FETCHER = True
   TASK_INDEXER = True
-  TASK_FETCHER_INTERVAL_SECONDS = 60 * 4
-  TASK_INDEXER_INTERVAL_SECONDS = 60
+  TASK_FETCHER_INTERVAL_SECONDS = int(os.environ.get("HMA_FETCHER_INTERVAL_SECONDS", 60 * 4))
+  TASK_INDEXER_INTERVAL_SECONDS = int(os.environ.get("HMA_INDEXER_INTERVAL_SECONDS", 60))
 elif role == "HASHER":
   ROLE_HASHER = True
 elif role == "MATCHER":
   ROLE_MATCHER = True
   ROLE_HASHER = False  # Can be combined, but not recommended for larger deployments
   TASK_INDEX_CACHE = True
-  TASK_INDEX_CACHE_INTERVAL_SECONDS = 30
+  TASK_INDEX_CACHE_INTERVAL_SECONDS = int(os.environ.get("HMA_INDEX_CACHE_INTERVAL_SECONDS", 30))
 else:
   sys.exit("Unknown role: " + role)
 

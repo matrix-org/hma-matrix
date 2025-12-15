@@ -60,6 +60,7 @@ services:
     environment:
       <<: *hma-config
       HMA_WORKER_ROLE: "CRON"
+      HMA_FETCHER_INTERVAL_SECONDS: "30"
   worker_ui:
     <<: *hma-common
     depends_on: ["worker_cron"]
