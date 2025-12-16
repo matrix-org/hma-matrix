@@ -1,0 +1,25 @@
+[project]
+name = "hma-matrix"
+version = "0.1.0"
+description = "A collection of Matrix-specific HMA extensions"
+authors = [
+    {name = "Your Name",email = "you@example.com"}
+]
+license = {text = "Apache-2.0"}
+readme = "README.md"
+requires-python = ">=3.10.0,<4.0.0"
+dependencies = [
+]
+
+[tool.poetry]
+package-mode = false
+
+[dependency-groups]
+dev = [
+    "threatexchange (>=1.2.11,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -62,13 +62,40 @@ When API authentication is enabled, supply the API key as a Bearer token in the 
 curl -h "Authorization: Bearer ${HMA_API_KEY}" ...
 ```
 
-## Matrix-specific exchanges
+## Matrix-specific extensions
 
-**TODO: Not yet written.**
+This repo also contains Matrix-specific extensions for HMA, such as exchanges for importing data from homeservers.
 
-Ideas:
-* Synapse quarantined media exchange/import
-* The same but for MMR
+Exchanges need to be configured and enabled from the HMA API (TODO: Link to docs when they exist upstream). Credentials to
+run these exchanges are stored as environment variables.
+
+### Synapse: Quarantined media exchange
+
+Exchange API: `synapse_quarantined`
+
+Credentials: An access token valid for your Synapse server's Admin API, stored in `SYNAPSE_ADMIN_ACCESS_TOKEN`.
+
+API JSON template (supplied to HMA API): 
+
+```json
+{
+  "admin_api_url": "https://client-server-api.example.org"
+}
+```
+
+**Important caveats**:
+* This exchange does hashing in-process, which can slow down fetch time. Give your `cron` worker some extra CPU headroom.
+* This exchange does **not** support use of the "unquarantine" API in Synapse. Using that API will **not** remove media 
+  from the HMA bank.
+* This exchange uses a batch size of 250 for remote media and 1000 for local media. This can mean it'll take a while to 
+  fetch all media from a server if the server has a lot of quarantined media.
+* This exchange best supports `pdq` and `video_md5` signal types. Note that `video_md5` is actually just an MD5 hash of 
+  the input file, regardless of whether it's actually a video.
+
+### Future considerations
+
+Ideas that may or may not be implemented:
+* Quarantined media import/exchange for MMR
 * Maybe policy list support if we can figure out how to make that work safely?
 * "flagged as spam" from policyserv/mjolnir/draupnir/meowlnir/etc
 

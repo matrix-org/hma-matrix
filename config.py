@@ -15,6 +15,7 @@ from threatexchange.exchanges.impl.ncmec_api import NCMECSignalExchangeAPI
 from threatexchange.exchanges.impl.stop_ncii_api import StopNCIISignalExchangeAPI
 from threatexchange.exchanges.impl.fb_threatexchange_api import FBThreatExchangeSignalExchangeAPI
 from threatexchange.exchanges.impl.techagainstterrorism_api import TATSignalExchangeAPI
+from matrix_exchanges.synapse_quarantined import SynapseQuarantinedExchangeAPI
 
 # ----------------------------------
 # Database configuration
@@ -123,5 +124,6 @@ STORAGE_IFACE_INSTANCE = DefaultOMMStore(
     NCMECSignalExchangeAPI,
     StopNCIISignalExchangeAPI,
     TATSignalExchangeAPI,
+    SynapseQuarantinedExchangeAPI,
   ],
 )
