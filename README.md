@@ -50,8 +50,10 @@ See [the HMA API docs](https://github.com/facebook/ThreatExchange/blob/main/hash
 To quickly set up a local HMA stack for developing applications which use HMA, the Docker Compose file from this repo can be used.
 
 1. `git clone https://github.com/matrix-org/hma-matrix.git && cd hma-matrix`
-2. `docker compose up -d`
-3. Visit `http://localhost:5100/ui`
+2. Set the `SYNAPSE_ADMIN_ACCESS_TOKEN` environment variable. It only needs to be a valid token if you intend to use the 
+   Synapse Quarantined Media exchange described below.
+3. `docker compose up -d`
+4. Visit `http://localhost:5100/ui`
 
 > [!CAUTION]
 > This stack is set up by default *without* an API key to allow use of the UI. It's recommended to set an API key in production deployments.

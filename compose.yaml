@@ -20,6 +20,11 @@ networks:
   hma:
     driver: bridge
 
+secrets:
+  synapse_admin_access_token:
+    # Pull secret from machine environment
+    environment: SYNAPSE_ADMIN_ACCESS_TOKEN
+
 services:
   db:
     image: postgres
@@ -61,6 +66,9 @@ services:
       <<: *hma-config
       HMA_WORKER_ROLE: "CRON"
       HMA_FETCHER_INTERVAL_SECONDS: "30"
+      USE_DOCKER_SECRETS: "true"
+    secrets:
+      - synapse_admin_access_token
   worker_ui:
     <<: *hma-common
     depends_on: ["worker_cron"]
