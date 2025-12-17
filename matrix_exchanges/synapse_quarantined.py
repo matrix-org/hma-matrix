@@ -134,8 +134,10 @@ class SynapseQuarantinedExchangeAPI(
             f"{self.collab.admin_api_url}/_synapse/admin/v1/media/quarantined?kind={"local" if local else "remote"}&from={from_token}&limit={1000 if local else 250}",
             headers={"Authorization": f"Bearer {self._access_token}"},
         )
+        if res.status_code != 200:
+            raise RuntimeError(f"Failed to fetch media: {res.text}")
         json = res.json()
-        return json["media"], json.get("next_batch", "")
+        return json.get("media", []), json.get("next_batch", "")
 
     def _hash(self, mxc_uri: str, signal_type: t.Type[SignalType]) -> str | None:
         if not issubclass(signal_type, BytesHasher):
@@ -144,10 +146,13 @@ class SynapseQuarantinedExchangeAPI(
             # We can ignore the cast warning because we're only really expecting to take a PDQSignal anyway, which inherits both classes.
             # noinspection PyInvalidCast
             hasher = t.cast(BytesHasher, signal_type)
-            b = requests.get(
+            res = requests.get(
                 f"{self.collab.admin_api_url}/_matrix/client/v1/media/download/{mxc_uri[len("mxc://"):]}?admin_unsafely_bypass_quarantine=true",
                 headers={"Authorization": f"Bearer {self._access_token}"},
-            ).content
+            )
+            if res.status_code != 200:
+                raise RuntimeError(f"Failed to download media: {res.text}")
+            b = res.content
             return hasher.hash_from_bytes(b)
         except PIL.UnidentifiedImageError:
             # ignore non-image files (they're probably encrypted)
