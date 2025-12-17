@@ -16,6 +16,8 @@ _API_NAME: str = "synapse_quarantined"
 
 @dataclass
 class _SynapseQuarantinedCollabConfigRequiredFields:
+    """Required config fields for the exchange. Used by SynapseQuarantinedCollabConfig."""
+
     admin_api_url: str = field(
         metadata={"help": "The admin API URL for Synapse"}
     )
@@ -26,6 +28,8 @@ class SynapseQuarantinedCollabConfig(
     CollaborationConfigWithDefaults,
     _SynapseQuarantinedCollabConfigRequiredFields
 ):
+    """Container class for exchange API configuration."""
+
     pass
 
 
@@ -33,6 +37,8 @@ class SynapseQuarantinedCollabConfig(
 class SynapseQuarantinedCheckpoint(
     state.FetchCheckpointBase,
 ):
+    """Tracks where HMA left off in the exchange fetching. Created by HMA as-needed, populated by us."""
+
     local_from_token: str
     remote_from_token: str
 
@@ -43,6 +49,8 @@ class SynapseQuarantinedCheckpoint(
 
 @dataclass
 class SynapseQuarantinedCredentials(auth.CredentialHelper):
+    """Credentials for accessing Synapse's admin API. Created by HMA as-needed."""
+
     ENV_VARIABLE: t.ClassVar[str] = "SYNAPSE_ADMIN_ACCESS_TOKEN"
     FILE_NAME: t.ClassVar[str] = "~/.synapse_admin_access_token"
 
@@ -60,6 +68,8 @@ class SynapseQuarantinedCredentials(auth.CredentialHelper):
 class SynapseQuarantinedSignalMetadata(
     state.FetchedSignalMetadata,
 ):
+    """Tracks per-signal (media item) metadata for the HMA database."""
+
     mxc_uri: str
 
 
@@ -71,6 +81,11 @@ class SynapseQuarantinedExchangeAPI(
         SynapseQuarantinedSignalMetadata,
     ],
 ):
+    """
+    This exchange pulls media from Synapse's quarantined media list so it can be downloaded and hashed
+    locally before being used by HMA for inclusion in a content bank somewhere.
+    """
+
     def __init__(self, collab: SynapseQuarantinedCollabConfig, access_token: str):
         super().__init__()
         self.collab = collab
