@@ -1,0 +1,7 @@
+# Don't copy project files or ones which might "conflict" with HMA upstream
+/.idea
+/.github
+README.md
+compose.yaml
+Dockerfile
+LICENSE
