@@ -59,26 +59,6 @@ FLASK_LOGGING_CONFIG = dictConfig(
 )
 
 # Export flags to HMA depending on our definition of a "role"
-# role = os.environ.get("HMA_WORKER_ROLE", "")
-# if role == "UI":
-#   UI_ENABLED = True
-# elif role == "CURATOR":
-#   ROLE_CURATOR = True
-# elif role == "CRON":  # There should only be ONE of these
-#   TASK_FETCHER = True
-#   TASK_INDEXER = True
-#   TASK_FETCHER_INTERVAL_SECONDS = int(os.environ.get("HMA_FETCHER_INTERVAL_SECONDS", 60 * 4))
-#   TASK_INDEXER_INTERVAL_SECONDS = int(os.environ.get("HMA_INDEXER_INTERVAL_SECONDS", 60))
-# elif role == "HASHER":
-#   ROLE_HASHER = True
-# elif role == "MATCHER":
-#   ROLE_MATCHER = True
-#   ROLE_HASHER = False  # Can be combined, but not recommended for larger deployments
-#   TASK_INDEX_CACHE = True
-#   TASK_INDEX_CACHE_INTERVAL_SECONDS = int(os.environ.get("HMA_INDEX_CACHE_INTERVAL_SECONDS", 30))
-# else:
-#   sys.exit("Unknown role: " + role)
-
 # Support multiple roles via CSV
 # HMA_WORKER_ROLE can be a single role or a comma-separated list of roles
 role_list = os.environ.get("HMA_WORKER_ROLE", "")
@@ -87,31 +67,32 @@ if not role_list:
 
 # Parse comma-separated roles and make them uppercase
 roles = [role.strip().upper() for role in role_list.split(",")]
-invalid_roles = [role for role in roles if role not in ["UI", "CURATOR", "CRON", "HASHER", "MATCHER"]]
-if invalid_roles:
-  sys.exit("Unknown roles: " + ", ".join(invalid_roles))
 
 # Enable features based on provided roles
-if "UI" in roles:
-  UI_ENABLED = True
+for role in roles:
+  if role == "UI":
+    UI_ENABLED = True
 
-if "CURATOR" in roles:
-  ROLE_CURATOR = True
+  elif role == "CURATOR":
+    ROLE_CURATOR = True
 
-if "CRON" in roles:
-  TASK_FETCHER = True
-  TASK_INDEXER = True
-  TASK_FETCHER_INTERVAL_SECONDS = int(os.environ.get("HMA_FETCHER_INTERVAL_SECONDS", 60 * 4))
-  TASK_INDEXER_INTERVAL_SECONDS = int(os.environ.get("HMA_INDEXER_INTERVAL_SECONDS", 60))
+  elif role == "CRON":
+    TASK_FETCHER = True
+    TASK_INDEXER = True
+    TASK_FETCHER_INTERVAL_SECONDS = int(os.environ.get("HMA_FETCHER_INTERVAL_SECONDS", 60 * 4))
+    TASK_INDEXER_INTERVAL_SECONDS = int(os.environ.get("HMA_INDEXER_INTERVAL_SECONDS", 60))
 
-if "HASHER" in roles:
-  ROLE_HASHER = True
+  elif role == "HASHER":
+    ROLE_HASHER = True
 
-if "MATCHER" in roles:
-  ROLE_MATCHER = True
-  ROLE_HASHER = False
-  TASK_INDEX_CACHE = True
-  TASK_INDEX_CACHE_INTERVAL_SECONDS = int(os.environ.get("HMA_INDEX_CACHE_INTERVAL_SECONDS", 30))
+  elif role == "MATCHER":
+    ROLE_MATCHER = True
+    ROLE_HASHER = False
+    TASK_INDEX_CACHE = True
+    TASK_INDEX_CACHE_INTERVAL_SECONDS = int(os.environ.get("HMA_INDEX_CACHE_INTERVAL_SECONDS", 30))
+  
+  else:
+    sys.exit(f"Unknown role: {role}")
 
 
 # ----------------------------------
