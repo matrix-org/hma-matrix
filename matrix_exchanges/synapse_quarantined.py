@@ -39,8 +39,7 @@ class SynapseQuarantinedCheckpoint(
 ):
     """Tracks where HMA left off in the exchange fetching. Created by HMA as-needed, populated by us."""
 
-    local_from_token: str
-    remote_from_token: str
+    from_id: int = field(default=0)
 
     def is_stale(self) -> bool:
         # When an exchange becomes stale it loses its checkpoint, so we don't really want to do that.
@@ -121,40 +120,34 @@ class SynapseQuarantinedExchangeAPI(
         supported_signal_types: t.Sequence[t.Type[SignalType]],
         checkpoint: t.Optional[SynapseQuarantinedCheckpoint],
     ) -> t.Iterator[state.FetchDelta[t.Tuple[str, str], SynapseQuarantinedSignalMetadata, SynapseQuarantinedCheckpoint]]:
-        # Process local media first
-        local_token = checkpoint.local_from_token if checkpoint else "0"
-        local_media_mxcs, next_batch = self._fetch(True, local_token)
-        if next_batch != "":
-            local_token = next_batch.split("-", maxsplit=1)[0] + "-0"
-
-        # Now process remote media
-        remote_token = checkpoint.remote_from_token if checkpoint else 0
-        remote_media_mxcs, next_batch = self._fetch(False, remote_token)
-        if next_batch != "":
-            remote_token = next_batch.split("-", maxsplit=1)[0] + "-0"
+        from_id = checkpoint.from_id if checkpoint else 0
+        media_rows, next_batch = self._fetch(from_id)
+        media_rows = [r for r in media_rows if r.get("quarantined", True)]
 
         # Hash the media, if we can
         ret = list()
-        for media_mxc in local_media_mxcs + remote_media_mxcs:
+        for media_row in media_rows:
+            origin = media_row.get("origin", "")
+            media_id = media_row.get("media_id", "")
             for signal_type in supported_signal_types:
-                signal_hash = self._hash(media_mxc, signal_type)
+                signal_hash = self._hash(origin, media_id, signal_type)
                 if signal_hash:
-                    ret.append(((signal_type.get_name(), signal_hash), SynapseQuarantinedSignalMetadata(media_mxc)))
+                    ret.append(((signal_type.get_name(), signal_hash), SynapseQuarantinedSignalMetadata(f"mxc://{origin}/{media_id}")))
 
         # Return the delta
-        yield state.FetchDelta(dict(ret), SynapseQuarantinedCheckpoint(local_token, remote_token))
+        yield state.FetchDelta(dict(ret), SynapseQuarantinedCheckpoint(from_id=next_batch))
 
-    def _fetch(self, local: bool, from_token: str) -> tuple[list[str], str]:
+    def _fetch(self, from_id: int) -> tuple[list[dict], int]:
         res = requests.get(
-            f"{self.collab.admin_api_url}/_synapse/admin/v1/media/quarantined?kind={"local" if local else "remote"}&from={from_token}&limit={1000 if local else 250}",
+            f"{self.collab.admin_api_url}/_synapse/admin/v1/media/quarantine_changes?from={from_id}",
             headers={"Authorization": f"Bearer {self._access_token}"},
         )
         if res.status_code != 200:
             raise RuntimeError(f"Failed to fetch media: {res.text}")
         json = res.json()
-        return json.get("media", []), json.get("next_batch", "")
+        return json.get("rows", []), json.get("next_batch", 0)
 
-    def _hash(self, mxc_uri: str, signal_type: t.Type[SignalType]) -> str | None:
+    def _hash(self, origin: str, media_id: str, signal_type: t.Type[SignalType]) -> str | None:
         if not issubclass(signal_type, BytesHasher):
             return None
         try:
@@ -162,7 +155,7 @@ class SynapseQuarantinedExchangeAPI(
             # noinspection PyInvalidCast
             hasher = t.cast(BytesHasher, signal_type)
             res = requests.get(
-                f"{self.collab.admin_api_url}/_matrix/client/v1/media/download/{mxc_uri[len("mxc://"):]}?admin_unsafely_bypass_quarantine=true",
+                f"{self.collab.admin_api_url}/_matrix/client/v1/media/download/{origin}/{media_id}?admin_unsafely_bypass_quarantine=true",
                 headers={"Authorization": f"Bearer {self._access_token}"},
             )
             if res.status_code != 200:

@@ -97,6 +97,8 @@ API JSON template (supplied to HMA API):
   fetch all media from a server if the server has a lot of quarantined media.
 * This exchange best supports `pdq` and `video_md5` signal types. Note that `video_md5` is actually just an MD5 hash of 
   the input file, regardless of whether it's actually a video.
+* The API this exchange uses is not yet included in a Synapse release, and may change without notice. Track 
+  [this PR](https://github.com/element-hq/synapse/pull/19558) for details.
 
 ### Future considerations
 
