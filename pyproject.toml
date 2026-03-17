@@ -9,6 +9,7 @@ license = {text = "Apache-2.0"}
 readme = "README.md"
 requires-python = ">=3.10.0,<4.0.0"
 dependencies = [
+    "threatexchange (>=1.2.13,<2.0.0)"
 ]
 
 [tool.poetry]
