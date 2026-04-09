@@ -145,7 +145,7 @@ class SynapseQuarantinedExchangeAPI(
         if res.status_code != 200:
             raise RuntimeError(f"Failed to fetch media: {res.text}")
         json = res.json()
-        return json.get("rows", []), json.get("next_batch", 0)
+        return json.get("changes", []), json.get("next_batch", 0)
 
     def _hash(self, origin: str, media_id: str, signal_type: t.Type[SignalType]) -> str | None:
         if not issubclass(signal_type, BytesHasher):
