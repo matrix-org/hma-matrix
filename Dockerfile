@@ -1,4 +1,4 @@
-FROM ghcr.io/facebook/threatexchange/hma:1.1.3
+FROM ghcr.io/facebook/threatexchange/hma:1.1.4
 
 # Set HMA config by default
 ENV OMM_CONFIG=/matrix-config.py
