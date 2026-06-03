@@ -473,14 +473,14 @@ files = [
 
 [[package]]
 name = "threatexchange"
-version = "1.2.15"
+version = "1.2.16"
 description = "threatexchange is a Python Library and CLI tool for interfacing with Facebook's ThreatExchange."
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev"]
 files = [
-    {file = "threatexchange-1.2.15-py3-none-any.whl", hash = "sha256:ff9b141dd1f7ef0f5466989b256c8d983621790e1ecb7b154227d7acd9477243"},
-    {file = "threatexchange-1.2.15.tar.gz", hash = "sha256:4b46ff3f1af7fc486d342152c20454861e73f06d8087fc12a651e2ec68298430"},
+    {file = "threatexchange-1.2.16-py3-none-any.whl", hash = "sha256:4459a29c30e76b0af1d3545873bb65a5f8eecd0eb1a43cc1300f9a52ea30e7b7"},
+    {file = "threatexchange-1.2.16.tar.gz", hash = "sha256:1be357dc0f3c6da1dd8a9cad48c12fc72dac5b719e7971e14c8d988287369847"},
 ]
 
 [package.dependencies]
@@ -545,4 +545,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10.0,<4.0.0"
-content-hash = "0e047dd93ddbec976ce0d14a86f459ee7f89a2da1acda7743128791e4de959ee"
+content-hash = "a5cedf6f6c76e18014bd25ddc841dd36f2437aa94bc5f5a602667cfc174d9fdd"
