@@ -11,6 +11,7 @@ This repo provides a Docker image which is layered on top of HMA's image. Config
 The following environment variables can be specified:
 
 * `HMA_DB_HOST` (default `localhost`) - The hostname (with port if required) for your PostgreSQL database running HMA.
+  * `MATCHER` and `HASHER` workers can use a readonly connection to the database. All other workers require a normal read+write connection. 
 * `HMA_DB_NAME` (default `hma`) - The name of the database on the PostgreSQL server to use.
 * `HMA_DB_USER` (default `hma`) - The username to access the PostgreSQL database.
 * `HMA_DB_PASS` (no default - **required**) - The password for the above user.
