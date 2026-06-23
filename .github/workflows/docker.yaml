@@ -11,7 +11,7 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "travis/donotuse-2026062301"]
     tags: ["*"]
   pull_request: {}  # all PRs
 
