@@ -159,6 +159,9 @@ class SynapseQuarantinedExchangeAPI(
                 headers={"Authorization": f"Bearer {self._access_token}"},
             )
             if res.status_code != 200:
+                if res.status_code == 404:
+                    # ignore images we can't download (purged, URL previews, etc)
+                    return None
                 raise RuntimeError(f"Failed to download media: {res.text}")
             b = res.content
             return hasher.hash_from_bytes(b)
