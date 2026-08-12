@@ -168,3 +168,6 @@ class SynapseQuarantinedExchangeAPI(
         except PIL.UnidentifiedImageError:
             # ignore non-image files (they're probably encrypted)
             return None
+        except OSError:
+            # ignore files that are probably corrupt
+            return None
