@@ -171,3 +171,6 @@ class SynapseQuarantinedExchangeAPI(
         except OSError:
             # ignore files that are probably corrupt
             return None
+        except ValueError:
+            # also probably corrupt
+            return None
