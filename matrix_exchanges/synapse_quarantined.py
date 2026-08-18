@@ -1,6 +1,7 @@
 import typing as t
 from dataclasses import dataclass, field
 
+import logging
 import PIL
 import requests
 from threatexchange.exchanges import auth, fetch_state as state
@@ -13,6 +14,7 @@ from threatexchange.signal_type.signal_base import SignalType, BytesHasher
 
 _API_NAME: str = "synapse_quarantined"
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class _SynapseQuarantinedCollabConfigRequiredFields:
@@ -138,9 +140,13 @@ class SynapseQuarantinedExchangeAPI(
         yield state.FetchDelta(dict(ret), SynapseQuarantinedCheckpoint(from_id=next_batch))
 
     def _fetch(self, from_id: int) -> tuple[list[dict], int]:
+        logger.info(f"Fetching media from {from_id}")
         res = requests.get(
             f"{self.collab.admin_api_url}/_synapse/admin/v1/media/quarantine_changes?from={from_id}",
-            headers={"Authorization": f"Bearer {self._access_token}"},
+            headers={
+                "Authorization": f"Bearer {self._access_token}",
+                "User-Agent": "hma-matrix",
+            },
         )
         if res.status_code != 200:
             raise RuntimeError(f"Failed to fetch media: {res.text}")
@@ -154,9 +160,13 @@ class SynapseQuarantinedExchangeAPI(
             # We can ignore the cast warning because we're only really expecting to take a PDQSignal anyway, which inherits both classes.
             # noinspection PyInvalidCast
             hasher = t.cast(BytesHasher, signal_type)
+            logger.info(f"Downloading mxc://{origin}/{media_id}")
             res = requests.get(
                 f"{self.collab.admin_api_url}/_matrix/client/v1/media/download/{origin}/{media_id}?admin_unsafely_bypass_quarantine=true",
-                headers={"Authorization": f"Bearer {self._access_token}"},
+                headers={
+                    "Authorization": f"Bearer {self._access_token}",
+                    "User-Agent": "hma-matrix",
+                },
             )
             if res.status_code != 200:
                 if res.status_code == 404:
