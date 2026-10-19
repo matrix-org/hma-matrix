@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import logging
 import PIL
 import requests
+from PIL import Image
 from threatexchange.exchanges import auth, fetch_state as state
 from threatexchange.exchanges import signal_exchange_api
 from threatexchange.exchanges.collab_config import (
@@ -177,6 +178,9 @@ class SynapseQuarantinedExchangeAPI(
             return hasher.hash_from_bytes(b)
         except PIL.UnidentifiedImageError:
             # ignore non-image files (they're probably encrypted)
+            return None
+        except Image.DecompressionBombError:
+            # these images should probably be banned elsewhere, but ignore them at this level
             return None
         except OSError:
             # ignore files that are probably corrupt
