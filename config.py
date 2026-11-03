@@ -1,5 +1,5 @@
 # This is the config file supplied to HMA
-# See https://github.com/facebook/ThreatExchange/tree/main/hasher-matcher-actioner#configurability for details
+# See https://github.com/meta/ThreatExchange/tree/main/hasher-matcher-actioner#configurability for details
 
 import os
 import sys
