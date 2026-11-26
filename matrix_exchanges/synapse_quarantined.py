@@ -173,7 +173,9 @@ class SynapseQuarantinedExchangeAPI(
                     },
                     json={
                         "msgtype": "m.text",
-                        "body": f"⚠️ [hma-matrix] Failed to download media `mxc://{origin}/{media_id}` after {attempt} attempts - skipping\nYou can manually add the hash to HMA if you have a copy of the media.",
+                        # Note: we don't set HTML content because escaping HTML sounds un-fun. The markdown doesn't translate,
+                        # but makes it easier to copy/paste in clients.
+                        "body": f"⚠️ [hma-matrix] Failed to download **quarantined** media `mxc://{origin}/{media_id}` after {attempt} attempts - skipping. You may need to manually add the media. Take precautions: it was quarantined content.",
                     },
                 )
                 if res.status_code != 200:
@@ -181,7 +183,7 @@ class SynapseQuarantinedExchangeAPI(
                 logger.info(f"Skipping mxc://{origin}/{media_id} because of {attempt} failed downloads. Notification sent: {res.text}")
                 return None  # if we sent a notification, skip the download
             else:  # if no notification room configured, just explode
-                raise RuntimeError(f"Failed to download media after {attempt} tries: {origin}/{media_id}")
+                raise RuntimeError(f"Failed to download media after {attempt} tries: mxc://{origin}/{media_id}")
 
         logger.info(f"Downloading mxc://{origin}/{media_id} (attempt {attempt + 1})")
         res = requests.get(
