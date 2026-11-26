@@ -90,6 +90,10 @@ API JSON template (supplied to HMA API):
 }
 ```
 
+If `notify_skipped_downloads_room_id` is set to a room ID in the above JSON, the importer will notify about failed downloads
+using the same account the `SYNAPSE_ADMIN_ACCESS_TOKEN` is for, and skip downloading them. If not supplied, the importer
+will keep raising exceptions until it becomes un-stuck, possibly requiring manual intervention.
+
 **Important caveats**:
 * This exchange does hashing in-process, which can slow down fetch time. Give your `cron` worker some extra CPU headroom.
 * This exchange does **not** support use of the "unquarantine" API in Synapse. Using that API will **not** remove media 

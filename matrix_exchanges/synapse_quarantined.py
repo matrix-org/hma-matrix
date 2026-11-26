@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import logging
 import PIL
 import requests
+from datetime import datetime
 from PIL import Image
 from threatexchange.exchanges import auth, fetch_state as state
 from threatexchange.exchanges import signal_exchange_api
@@ -33,7 +34,10 @@ class SynapseQuarantinedCollabConfig(
 ):
     """Container class for exchange API configuration."""
 
-    pass
+    notify_skipped_downloads_room_id: str | None = field(
+        metadata={"help": "The room ID to send notifications of failed downloads to. The account must already be joined."},
+        default=None,
+    )
 
 
 @dataclass
@@ -154,6 +158,50 @@ class SynapseQuarantinedExchangeAPI(
         json = res.json()
         return json.get("changes", []), json.get("next_batch", 0)
 
+    def _download(self, origin: str, media_id: str, attempt: int = 0) -> bytes | None:
+        if attempt >= 5:
+            if self.collab.notify_skipped_downloads_room_id is not None:
+                # We only really want to notify about send failures once a day (ish), so set up a transaction ID which
+                # deduplicates those notifications for us.
+                # See https://spec.matrix.org/v1.19/client-server-api/#put_matrixclientv3roomsroomidsendeventtypetxnid
+                txn_id = f"{origin}{media_id}{datetime.now().strftime("%Y%m%d")}"
+                res = requests.put(
+                    f"{self.collab.admin_api_url}/_matrix/client/v3/rooms/{self.collab.notify_skipped_downloads_room_id}/send/m.room.message/{txn_id}",
+                    headers={
+                        "Authorization": f"Bearer {self._access_token}",
+                        "User-Agent": "hma-matrix",
+                    },
+                    json={
+                        "msgtype": "m.text",
+                        "body": f"⚠️ [hma-matrix] Failed to download media `mxc://{origin}/{media_id}` after {attempt} attempts - skipping\nYou can manually add the hash to HMA if you have a copy of the media.",
+                    },
+                )
+                if res.status_code != 200:
+                    raise RuntimeError(f"Failed to send failed notification message: {res.text}")
+                logger.info(f"Skipping mxc://{origin}/{media_id} because of {attempt} failed downloads. Notification sent: {res.text}")
+                return None  # if we sent a notification, skip the download
+            else:  # if no notification room configured, just explode
+                raise RuntimeError(f"Failed to download media after {attempt} tries: {origin}/{media_id}")
+
+        logger.info(f"Downloading mxc://{origin}/{media_id} (attempt {attempt + 1})")
+        res = requests.get(
+            f"{self.collab.admin_api_url}/_matrix/client/v1/media/download/{origin}/{media_id}?admin_unsafely_bypass_quarantine=true",
+            headers={
+                "Authorization": f"Bearer {self._access_token}",
+                "User-Agent": "hma-matrix",
+            },
+        )
+
+        if res.status_code != 200:
+            if res.status_code == 404:
+                # ignore images we can't download (purged, URL previews, etc)
+                return None
+            # retry (hopefully). Note that this is an instant retry, so we're somewhat likely to hit failure cases. This
+            # is fine enough for now - we can add backoff/delays later (without using time.sleep() because that'll cause
+            # problems).
+            return self._download(origin, media_id, attempt + 1)
+        return res.content
+
     def _hash(self, origin: str, media_id: str, signal_type: t.Type[SignalType]) -> str | None:
         if not issubclass(signal_type, BytesHasher):
             return None
@@ -161,20 +209,11 @@ class SynapseQuarantinedExchangeAPI(
             # We can ignore the cast warning because we're only really expecting to take a PDQSignal anyway, which inherits both classes.
             # noinspection PyInvalidCast
             hasher = t.cast(BytesHasher, signal_type)
-            logger.info(f"Downloading mxc://{origin}/{media_id}")
-            res = requests.get(
-                f"{self.collab.admin_api_url}/_matrix/client/v1/media/download/{origin}/{media_id}?admin_unsafely_bypass_quarantine=true",
-                headers={
-                    "Authorization": f"Bearer {self._access_token}",
-                    "User-Agent": "hma-matrix",
-                },
-            )
-            if res.status_code != 200:
-                if res.status_code == 404:
-                    # ignore images we can't download (purged, URL previews, etc)
-                    return None
-                raise RuntimeError(f"Failed to download media: {res.text}")
-            b = res.content
+
+            b = self._download(origin, media_id)
+            if b is None:
+                return None  # download failed/impossible
+
             return hasher.hash_from_bytes(b)
         except PIL.UnidentifiedImageError:
             # ignore non-image files (they're probably encrypted)
